@@ -1,0 +1,194 @@
+#!/bin/bash
+
+# User-configurable parameters:
+
+MOUNT="/mnt/tmp"
+DEVICE="/dev/sdc"
+
+# Read command line arguments:
+
+SRCDIR=$1
+FLOPPY=$2
+MODE=$3
+ORIGINALFLOPPY=$FLOPPY
+FILE=1
+
+# Show usage information if started without parameters:
+
+if [ "$MODE" == "" ]; then
+	echo ""
+	echo " GotekTool - A Batch File Copier for Gotek USB Floppy Disk Emulators"
+	echo " Copyright 2017 Sebastian Mate"
+	echo ""
+	echo "               Usage: gotektool SOURCEDIRECTORY STARTFLOPPY MODE"
+	echo ""
+	echo "     SOURCEDIRECTORY: The base directory to be copied."
+	echo "         STARTFLOPPY: The number of the first virtal floppy."
+	echo "                MODE: The mode of file handling, which is:"
+	echo "                      1 = Flatten directories and copy all files to the root directory of the virtual floppies."
+	echo "                      2 = As 1, but also change floppy for each directory."
+	echo "                      3 = Preserve original directory structures."
+	echo "                      4 = Move contents from base directories to separate virtual floppies."
+	echo ""
+	echo "          WARNING: This tool does erase data on the target device and is potentially dangerous."
+	echo "                   Use on your own risk!"
+	echo ""
+	exit 1
+fi
+
+
+# Translate command line arguments into settings:
+
+if [ "$MODE" == "1" ]; then
+	KEEPFOLDER=FLATTEN
+fi
+
+if [ "$MODE" == "2" ]; then
+	KEEPFOLDER=FLATTEN
+	NEXTFLOPPY=ALLDIRS
+fi
+
+if [ "$MODE" == "3" ]; then
+	KEEPFOLDER=PRESERVE
+fi
+
+if [ "$MODE" == "4" ]; then
+	KEEPFOLDER=PRESERVE
+	NEXTFLOPPY=ROOTDIRS
+fi
+
+
+function nextFloppy { # Switch to the next virtual floppy
+	FILE=1
+	FLOPPY=`echo "$FLOPPY + 1" | bc`
+	FINALFLOPPY=$FLOPPY
+	echo ""
+	echo "" >> Contents.tmp
+	umount $MOUNT
+	sleep 1
+	mount -o loop,offset=$[$FLOPPY*1536]k,sizelimit=1440k,users,rw,umask=000 $DEVICE $MOUNT
+	sleep 1
+	rm -r $MOUNT/* 2> /dev/null
+}
+
+function copyFile { # Copy a file from $1 to $MOUNT/$2
+	
+	PRETTYFLOPPY=$(printf "%03d" $FLOPPY)
+	echo "$PRETTYFLOPPY: $2"
+	
+	DirToMake=$(dirname "$2")
+	
+	if [ ! -d "$DirToMake" ]; then
+		#echo "Creating directory" $DirToMake
+		mkdir -p "$MOUNT/$DirToMake"
+	fi
+		
+	if ! cp "$1" "$MOUNT/$2" 2> /dev/null; then  # No more space on virtual floppy left!
+
+		# Delete the incomplete file on the target device:
+		rm "$MOUNT/$2" 2> /dev/null
+
+		# Continue with next floppy:
+		nextFloppy
+		
+		# Try to copy again:
+		if ! cp "$1" "$MOUNT/$2" 2> /dev/null; then # Still fails. The file is probably too big!
+			echo "Sorry, could not copy the file. Too big!"
+			rm "$MOUNT/$2" 2> /dev/null
+		else
+			echo -e "$FLOPPY\t$FILE\t$f" >> Contents.tmp
+		fi
+	else
+		echo -e "$FLOPPY\t$FILE\t$f" >> Contents.tmp
+	fi
+
+}
+
+
+# Delete original "Contents" (if present) file to start a new one:
+
+rm Contents.tmp 2> /dev/null
+
+# Mount the first virtual floppy:
+
+mount -o loop,offset=$[$FLOPPY*1536]k,sizelimit=1440k,users,rw,umask=000 $DEVICE $MOUNT
+
+# Delete all files on the virtual floppy:
+
+rm -r $MOUNT/* 2> /dev/null
+
+# Find and iterate over all files in the source directory:
+
+find "$SRCDIR" -type f | sort | while read f
+do
+        
+    FileNameOnly=$(basename "$f")
+    SourceDirectoryNameOnly=$(dirname "$f")
+
+    TargetDirectoryNameOnly="${SourceDirectoryNameOnly/$SRCDIR/}"
+    
+    if [[ $TargetDirectoryNameOnly == /* ]]; then # remove leading "/" if present.
+		TargetDirectoryNameOnly=${TargetDirectoryNameOnly:1}
+    fi
+   
+
+	if [ "$NEXTFLOPPY" == "ALLDIRS" ]; then
+		FlipDirectory=$TargetDirectoryNameOnly
+	fi
+
+	if [ "$NEXTFLOPPY" == "ROOTDIRS" ]; then
+		FlipDirectory=$(echo "$TargetDirectoryNameOnly" | cut -d "/" -f1)
+		TargetDirectoryNameOnly="${TargetDirectoryNameOnly/$FlipDirectory/}"
+		if [[ $TargetDirectoryNameOnly == /* ]]; then # remove leading "/" if present.
+			TargetDirectoryNameOnly=${TargetDirectoryNameOnly:1}
+		fi
+	fi
+
+	# Check if we need to change the "floppy":
+	
+    if [ ! "$FILE" == "1" ]; then
+		if [ "$NEXTFLOPPY" == "ALLDIRS" ]; then
+			if [ ! "$LastFlipDirectory" == "$FlipDirectory" ]; then
+				nextFloppy
+			fi
+		fi
+		if [ "$NEXTFLOPPY" == "ROOTDIRS" ]; then
+			if [ ! "$LastFlipDirectory" == "$FlipDirectory" ]; then
+				nextFloppy
+			fi
+		fi
+	fi
+   
+   	# Copy the file:
+   
+    if [ "$KEEPFOLDER" == "FLATTEN" ]; then
+		copyFile "$f" "$FileNameOnly"
+	fi
+
+	if [ "$KEEPFOLDER" == "PRESERVE" ]; then
+		if [ "$TargetDirectoryNameOnly" == "" ]; then
+			copyFile "$f" "$FileNameOnly"
+		else
+			copyFile "$f" "$TargetDirectoryNameOnly/$FileNameOnly"
+		fi
+	fi
+
+	# Remember the the directory base for the next interation:
+	
+	LastFlipDirectory=$FlipDirectory
+	
+	# Increase file counter for Contents file:
+				
+	FILE=`echo "$FILE + 1" | bc`
+	
+done
+
+# Unmount the virtual floppy:
+
+umount $MOUNT
+
+# Copy the temporary "Contents" file to the final one:
+
+ORIGINALFLOPPY=$(printf "%03d" $ORIGINALFLOPPY)
+mv Contents.tmp "Contents $ORIGINALFLOPPY.txt"
+
