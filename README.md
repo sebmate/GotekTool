@@ -1,9 +1,9 @@
 # GotekTool
 Linux Bash script to mass-copy files to USB sticks that have been formatted for Gotek USB floppy drive emulators.
 
-The Gotek USB floppy disk drive emulators are excellent products. Upgrade old floppy-based hardware with USB storage capabilities. Unfortunately, the available (Windows only) software is a bit awkward to use, because you have to copy the files manually into directories first.
+The Gotek USB floppy disk drive emulators are excellent products. They allow you tp upgrade old floppy-based hardware with USB storage capabilities. Unfortunately, the available (Windows only) software is a bit awkward to use, because you have to first copy your files manually into directories and then sync all directories with the USB stick. It is also difficult to estimate how much data can go onto one virtual floppy, therefore your are very likely to waste space.
 
-This Linux script copies files to USB sticks formatted in the Gotek drive. It automatically switches to the next floppy disk when one is full. Several options are available to handle the directories (see below). At the end an index text file is created so that you can find the files quickly.
+This Linux script copies files to USB sticks formatted for the Gotek drive. It automatically switches to the next floppy disk when one is full. Several options are available for handling directories (see below). After uploading data to an USB stick, an index text file is created so that you can find the files quickly later on.
 
 I programmed this script to copy large amounts of style files to my Yamaha PSR-8000 keyboard. It makes the provision of files via a USB stick a breeze.
 
