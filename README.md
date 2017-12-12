@@ -5,9 +5,9 @@ The Gotek USB floppy disk drive emulators are excellent products. They allow you
 
 This Linux script copies files to USB sticks formatted for the Gotek drive. It automatically switches to the next floppy disk when one is full. Several options are available for handling directories (see below). After uploading data to an USB stick, an index text file is created so that you can find the files quickly later on.
 
-I programmed this script to copy large amounts of style files to my Yamaha PSR-8000 keyboard. It makes the provision of files via a USB stick a breeze.
+I programmed this script to make large amounts of style files available on my Yamaha PSR-8000 keyboard, which I had upgraded with a Gotek SFR1M44-U100K. It makes the provision of files via a USB stick a breeze!
 
-Attention: The script must be adjusted before use (mounting point and device must be changed if necessary). Use at your own risk!!
+Attention: The script must be properly configured before use (mounting point and device must be changed if necessary). Use at your own risk!!
 
 
     GotekTool - A Batch File Copier for Gotek USB Floppy Disk Emulators
