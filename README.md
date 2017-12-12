@@ -10,8 +10,8 @@ I programmed this script to copy large amounts of style files to my Yamaha PSR-8
 Attention: The script must be adjusted before use (mounting point and device must be changed if necessary). Use at your own risk!!
 
 
- GotekTool - A Batch File Copier for Gotek USB Floppy Disk Emulators
- Copyright 2017 Sebastian Mate
+    GotekTool - A Batch File Copier for Gotek USB Floppy Disk Emulators
+    Copyright 2017 Sebastian Mate
 
                Usage: gotektool SOURCEDIRECTORY STARTFLOPPY MODE
 
