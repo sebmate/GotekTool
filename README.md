@@ -1,7 +1,7 @@
 # GotekTool
-Linux Bash script to mass-copy files to USB sticks that have been formatted for Gotek USB floppy drive emulators.
+Linux Bash script to mass-copy files to USB sticks that had been formatted for Gotek USB floppy drive emulators.
 
-The Gotek USB floppy disk drive emulators are excellent products. They allow you tp upgrade old floppy-based hardware with USB storage capabilities. Unfortunately, the available (Windows only) software is a bit awkward to use, because you have to first copy your files manually into directories and then sync all directories with the USB stick. It is also difficult to estimate how much data can go onto one virtual floppy, therefore your are very likely to waste space.
+The Gotek USB floppy disk drive emulators are excellent products. They allow you to upgrade old floppy-based hardware with USB storage capabilities. Unfortunately, the available (Windows only) software is a bit awkward to use, because you have to first copy your files manually into directories and then sync all directories with the USB stick. It is also difficult to estimate how much data can fit onto one virtual floppy, therefore your are very likely to waste space.
 
 This Linux script copies files to USB sticks formatted for the Gotek drive. It automatically switches to the next floppy disk when one is full. Several options are available for handling directories (see below). After uploading data to an USB stick, an index text file is created so that you can find the files quickly later on.
 
@@ -25,3 +25,11 @@ Attention: The script must be properly configured before use (mounting point and
 
           WARNING: This tool does erase data on the target device and is potentially dangerous.
                    Use on your own risk!
+
+# Notes
+- Before using a new USB stick, delete the existing partition. In my case, not doing this caused the script failing to detect the correct file system of the virtual floppies. After that, partition/format the stick in your Gotek drive by keeping both buttons pressed when turning the unit on.
+- I recommend using my script only for bulk-loading data, starting at floppy 1, and to keep floppy 0 ("FDISK000") free for easy occasional file exchange on floppy 0 (as this one can be mounted automatically on most computers). Also see below.
+
+# Known Issues
+- At least on my KUbuntu 17.10 machine using the script creates new "Loop Device" entries in the left side bar of the Dolphin file manager. They disappear once you unmount the FDISK000 partition and close the Dophin window. Does anybody know how to improve this?
+- My script appears to only work after the first partition ("FDISK000") has been mounted (the Dolphin file manager does this automatically). I don't know if accessing this first partition (virtual floppy 0) with my script could cause trouble. That's the second reason why I recommend using my script only AFTER the first partition (starting with virtual floppy 1).
