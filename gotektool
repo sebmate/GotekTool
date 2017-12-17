@@ -82,6 +82,8 @@ function copyFile { # Copy a file from $1 to $MOUNT/$2
 		#echo "Creating directory" $DirToMake
 		mkdir -p "$MOUNT/$DirToMake"
 	fi
+	
+	# return  # uncomment this for debugging!
 		
 	if ! cp "$1" "$MOUNT/$2" 2> /dev/null; then  # No more space on virtual floppy left!
 
@@ -119,7 +121,7 @@ rm -r $MOUNT/* 2> /dev/null
 
 # Find and iterate over all files in the source directory:
 
-find "$SRCDIR" -type f | sort | while read f
+find "$SRCDIR" -type f | sort --version-sort | while read f
 do
         
     FileNameOnly=$(basename "$f")
