@@ -12,6 +12,7 @@ FLOPPY=$2
 MODE=$3
 ORIGINALFLOPPY=$FLOPPY
 FILE=1
+ALREADYONNEXT=FALSE
 
 # Show usage information if started without parameters:
 
@@ -23,12 +24,12 @@ if [ "$MODE" == "" ]; then
 	echo "               Usage: gotektool SOURCEDIRECTORY STARTFLOPPY MODE"
 	echo ""
 	echo "     SOURCEDIRECTORY: The base directory to be copied."
-	echo "         STARTFLOPPY: The number of the first virtal floppy."
+	echo "         STARTFLOPPY: The number of the first virtual floppy."
 	echo "                MODE: The mode of file handling, which is:"
 	echo "                      1 = Flatten directories and copy all files to the root directory of the virtual floppies."
 	echo "                      2 = As 1, but also change floppy for each directory."
 	echo "                      3 = Preserve original directory structures."
-	echo "                      4 = Move contents from base directories to separate virtual floppies."
+	echo "                      4 = Move contents from root directories to separate virtual floppies."
 	echo ""
 	echo "          WARNING: This tool does erase data on the target device and is potentially dangerous."
 	echo "                   Use on your own risk!"
@@ -65,16 +66,16 @@ function nextFloppy { # Switch to the next virtual floppy
 	echo ""
 	echo "" >> Contents.tmp
 	umount $MOUNT
-	sleep 1
+	sleep 2
 	mount -o loop,offset=$[$FLOPPY*1536]k,sizelimit=1440k,users,rw,umask=000 $DEVICE $MOUNT
-	sleep 1
+	sleep 2
 	rm -r $MOUNT/* 2> /dev/null
 }
 
 function copyFile { # Copy a file from $1 to $MOUNT/$2
 	
 	PRETTYFLOPPY=$(printf "%03d" $FLOPPY)
-	echo "$PRETTYFLOPPY: $2"
+	echo -ne "$PRETTYFLOPPY: $2"
 	
 	DirToMake=$(dirname "$2")
 	
@@ -87,10 +88,14 @@ function copyFile { # Copy a file from $1 to $MOUNT/$2
 		
 	if ! cp "$1" "$MOUNT/$2" 2> /dev/null; then  # No more space on virtual floppy left!
 
+		echo " [ERROR]"
+
 		# Delete the incomplete file on the target device:
 		rm "$MOUNT/$2" 2> /dev/null
 
 		# Continue with next floppy:
+	
+		echo "=== No more space left, switching to next floppy ==="
 		nextFloppy
 		
 		# Try to copy again:
@@ -98,9 +103,12 @@ function copyFile { # Copy a file from $1 to $MOUNT/$2
 			echo "Sorry, could not copy the file. Too big!"
 			rm "$MOUNT/$2" 2> /dev/null
 		else
+			PRETTYFLOPPY=$(printf "%03d" $FLOPPY)
+			echo "$PRETTYFLOPPY: $2 [SUCCESS]"
 			echo -e "$FLOPPY\t$FILE\t$f" >> Contents.tmp
 		fi
 	else
+		echo
 		echo -e "$FLOPPY\t$FILE\t$f" >> Contents.tmp
 	fi
 
@@ -151,11 +159,13 @@ do
     if [ ! "$FILE" == "1" ]; then
 		if [ "$NEXTFLOPPY" == "ALLDIRS" ]; then
 			if [ ! "$LastFlipDirectory" == "$FlipDirectory" ]; then
+				echo "=== Directory '$LastFlipDirectory' processed, switching to next floppy ==="
 				nextFloppy
 			fi
 		fi
 		if [ "$NEXTFLOPPY" == "ROOTDIRS" ]; then
 			if [ ! "$LastFlipDirectory" == "$FlipDirectory" ]; then
+				echo " === Root directory '$LastFlipDirectory' processed, switching to next floppy ==="
 				nextFloppy
 			fi
 		fi
