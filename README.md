@@ -16,15 +16,21 @@ Attention: The script must be properly configured before use (mounting point and
                Usage: gotektool SOURCEDIRECTORY STARTFLOPPY MODE
 
      SOURCEDIRECTORY: The base directory to be copied.
-         STARTFLOPPY: The number of the first virtal floppy.
+         STARTFLOPPY: The number of the first virtual floppy.
                 MODE: The mode of file handling, which is:
                       1 = Flatten directories and copy all files to the root directory of the virtual floppies.
                       2 = As 1, but also change floppy for each directory.
                       3 = Preserve original directory structures.
-                      4 = Move contents from base directories to separate virtual floppies.
+                      4 = Move contents from root directories to separate virtual floppies.
 
           WARNING: This tool does erase data on the target device and is potentially dangerous.
                    Use on your own risk!
+
+## Examples
+- Mode 1: Copies files which are in a directory structure (e.g., hierarchical picture collections) into the root directories of the floppies. The original directory structure will be lost. The tool will only switch to the next floppy as soon as one is full, therefore this is pretty space efficient.
+- Mode 2: As mode 1, but starts a new floppy for each directory being processed. This is NOT space efficient, but it kind of preserves the "grouping" of the original directory structure.
+- Mode 3: Preserves the original structure and switches to a new floppy when running out of space.
+- Mode 4: If you already have the contents of various floppy disks in separate directories (none larger than 1.44MB!), you can copy each directory onto one virtual floppy. This is useful for making installation disks (think of DOS, Windows) or any other software available on virtual floppies.
 
 ## Notes
 - I have no relationship whatsoever with the company Gotek. The tool contains the name in the hope that it will be found and considered useful.
